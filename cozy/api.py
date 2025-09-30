@@ -42,7 +42,7 @@ app.add_middleware(
 
 @app.get("/", include_in_schema=False)
 async def index():
-    return {"message": "Cozy API is running"}
+    return {"message": "Cozy is running - visit the /docs to explore the API"}
 
 
 @app.get(
