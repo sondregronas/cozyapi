@@ -7,7 +7,7 @@ from io import BytesIO
 import aiohttp
 import websockets
 
-from cozy.workflow import Workflow
+from workflow import Workflow
 
 COMFY_SERVER = os.getenv("COMFY_SERVER", "localhost:8188")
 USE_SSL = os.getenv("USE_SSL", "false").lower() in ("true", "1", "yes")
