@@ -1,16 +1,35 @@
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
 
 import comfy
-from util import get_image_res, ImageSize
-from workflow import Workflow, ComfySettings
+from schema import (
+    imagerequest_body,
+    construct_workflow,
+    ImageRequest,
+)
 
 load_dotenv()
 
-app = FastAPI()
+description = """
+<h2>A simple API for generating images with ComfyUI</h2>
+
+Made with ❤️ - source code available on <a href="https://github.com/sondregronas/cozyapi">GitHub</a>.
+"""
+
+app = FastAPI(
+    title="Cozy API",
+    description=description,
+    version="0.1.0",
+    openapi_tags=[
+        {"name": "Image Generation", "description": "Endpoints for generating images"}
+    ],
+    license_info={
+        "name": "MIT License",
+        "url": "https://opensource.org/license/mit/",
+    },
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -21,36 +40,44 @@ app.add_middleware(
 )
 
 
-@app.get("/")
+@app.get("/", include_in_schema=False)
 async def index():
     return {"message": "Cozy API is running"}
 
 
-class ImageRequest(BaseModel):
-    prompt: str
-    size: ImageSize = ImageSize.Landscape
+@app.get(
+    "/generate",
+    response_class=StreamingResponse,
+    name="Generate Image",
+    tags=["Image Generation"],
+)
+async def get_generate_image(request: ImageRequest = Depends()) -> StreamingResponse:
+    """
+    Generate an image based on the provided prompt and size using query parameters.
+
+    Returns PNG image bytes.
+    """
+    workflow = construct_workflow(request)
+
+    img = await comfy.generate_image(wf=workflow)
+    return StreamingResponse(img, media_type="image/png")
 
 
-@app.get("/generate", response_class=StreamingResponse)
-async def get_generate_image(
-    prompt: str, size: ImageSize = ImageSize.Landscape
+@app.post(
+    "/generate",
+    response_class=StreamingResponse,
+    name="Generate Image",
+    tags=["Image Generation"],
+)
+async def post_generate_image(
+    request: ImageRequest = imagerequest_body,
 ) -> StreamingResponse:
-    """Generate an image based on the provided prompt and size using query parameters."""
-    settings = ComfySettings(res=get_image_res(size))
-    workflow = Workflow(prompt=prompt, settings=settings)
+    """
+    Generate an image based on the provided prompt and size using a JSON body.
 
-    img = await comfy.generate_image(wf=workflow)
-    return StreamingResponse(img, media_type="image/png")
-
-
-@app.post("/generate", response_class=StreamingResponse)
-async def post_generate_image(request: ImageRequest) -> StreamingResponse:
-    """Generate an image based on the provided prompt and size using a JSON body."""
-    settings = ComfySettings(res=get_image_res(size=request.size))
-    workflow = Workflow(prompt=request.prompt, settings=settings)
-
-    img = await comfy.generate_image(wf=workflow)
-    return StreamingResponse(img, media_type="image/png")
+    Returns PNG image bytes.
+    """
+    return await get_generate_image(request)
 
 
 if __name__ == "__main__":

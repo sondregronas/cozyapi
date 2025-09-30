@@ -19,7 +19,7 @@ class ImageRes:
 @dataclass
 class ComfySettings:
     seed: int = -1  # -1 for random seed
-    steps: int = 40
+    steps: int = 50
     res: ImageRes = field(default_factory=ImageRes)
 
     def __post_init__(self):
