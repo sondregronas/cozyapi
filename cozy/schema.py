@@ -18,8 +18,10 @@ imagerequest_body = Body(
     examples=[
         {
             "prompt": "A cozy cabin in the woods made of gingerbread",
-            "width": 512,
+            "negative_prompt": "low resolution, blurry",
+            "width": 768,
             "height": 512,
+            "steps": 25,
         },
     ],
 )
@@ -57,7 +59,13 @@ class ImageRequest(BaseModel):
         description="Overrides the default height determined by `size`.",
         example=None,
     )
-
+    steps: Optional[int] = Query(
+        default=25,
+        ge=1,
+        le=100,
+        description="More steps equals better quality, but takes longer.",
+        example=25,
+    )
     seed: Optional[str | int] = Query(
         default=None,
         description="Will be used as the seed for image generation (Default: random).",
@@ -93,6 +101,8 @@ def construct_workflow(
             settings.seed = int(seed)
         except ValueError:
             settings.seed = abs(hash(seed)) % (10**8)
+
+    settings.steps = request.steps
 
     return Workflow(
         prompt=request.prompt,
