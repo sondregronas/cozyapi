@@ -16,7 +16,11 @@ class ImageSize(str, Enum):
 imagerequest_body = Body(
     ...,
     examples=[
-        {"prompt": "A cozy cabin in the woods", "width": 512, "height": 512},
+        {
+            "prompt": "A cozy cabin in the woods made of gingerbread",
+            "width": 512,
+            "height": 512,
+        },
     ],
 )
 
@@ -25,14 +29,14 @@ class ImageRequest(BaseModel):
     prompt: str = Query(
         ...,
         min_length=1,
-        max_length=1000,
+        max_length=3000,
         description="The prompt to generate an image for.",
         example="A cozy cabin in the woods made of gingerbread",
     )
     negative_prompt: Optional[str] = Query(
         "",
-        max_length=1000,
-        description="The negative prompt to avoid certain elements in the generated image.",
+        max_length=3000,
+        description="A negative prompt to avoid certain elements in the generated image.",
         example="low resolution, bad anatomy, blurry",
     )
     size: Optional[ImageSize] = Query(
@@ -43,26 +47,20 @@ class ImageRequest(BaseModel):
         default=None,
         ge=16,
         le=1024,
-        description=(
-            "Overrides the default width determined by `size`. "
-            "Leave empty to use the default."
-        ),
+        description="Overrides the default width determined by `size`.",
         example=None,
     )
     height: Optional[int] = Query(
         default=None,
         ge=16,
         le=1024,
-        description=(
-            "Overrides the default height determined by `size`. "
-            "Leave empty to use the default."
-        ),
+        description="Overrides the default height determined by `size`.",
         example=None,
     )
 
     seed: Optional[str | int] = Query(
         default=None,
-        description="Will be used as the seed for image generation (Default: random). Can be an integer or string.",
+        description="Will be used as the seed for image generation (Default: random).",
         example=None,
     )
 
