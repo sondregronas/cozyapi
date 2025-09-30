@@ -13,47 +13,6 @@ class ImageSize(str, Enum):
     Landscape = "landscape"
 
 
-prompt_query = Query(
-    ...,
-    min_length=1,
-    max_length=1000,
-    description="The prompt to generate an image for.",
-    example="A cozy cabin in the woods made of gingerbread",
-)
-
-width_query = Query(
-    default=None,
-    ge=16,
-    le=1024,
-    description=(
-        "Overrides the default width determined by `size`. "
-        "Leave empty to use the default."
-    ),
-    example=None,
-)
-
-height_query = Query(
-    default=None,
-    ge=16,
-    le=1024,
-    description=(
-        "Overrides the default height determined by `size`. "
-        "Leave empty to use the default."
-    ),
-    example=None,
-)
-
-seed_query = Query(
-    default=None,
-    description="Will be used as the seed for image generation (Default: random). Can be an integer or string.",
-    example=None,
-)
-
-imagesize_query = Query(
-    default=ImageSize.Landscape,
-    description="Choose between 1:1, 2:3 or 3:2. 512px on the short side. Ignored if width and height are specified.",
-)
-
 imagerequest_body = Body(
     ...,
     examples=[
@@ -63,11 +22,49 @@ imagerequest_body = Body(
 
 
 class ImageRequest(BaseModel):
-    prompt: str = prompt_query
-    size: Optional[ImageSize] = imagesize_query
-    width: Optional[int] = width_query
-    height: Optional[int] = height_query
-    seed: Optional[str | int] = seed_query
+    prompt: str = Query(
+        ...,
+        min_length=1,
+        max_length=1000,
+        description="The prompt to generate an image for.",
+        example="A cozy cabin in the woods made of gingerbread",
+    )
+    negative_prompt: Optional[str] = Query(
+        "",
+        max_length=1000,
+        description="The negative prompt to avoid certain elements in the generated image.",
+        example="low resolution, bad anatomy, blurry",
+    )
+    size: Optional[ImageSize] = Query(
+        default=ImageSize.Landscape,
+        description="Choose between 1:1, 2:3 or 3:2. 512px on the short side. Ignored if width and height are specified.",
+    )
+    width: Optional[int] = Query(
+        default=None,
+        ge=16,
+        le=1024,
+        description=(
+            "Overrides the default width determined by `size`. "
+            "Leave empty to use the default."
+        ),
+        example=None,
+    )
+    height: Optional[int] = Query(
+        default=None,
+        ge=16,
+        le=1024,
+        description=(
+            "Overrides the default height determined by `size`. "
+            "Leave empty to use the default."
+        ),
+        example=None,
+    )
+
+    seed: Optional[str | int] = Query(
+        default=None,
+        description="Will be used as the seed for image generation (Default: random). Can be an integer or string.",
+        example=None,
+    )
 
 
 def get_image_res(size: ImageSize) -> ImageRes:
@@ -83,7 +80,6 @@ def get_image_res(size: ImageSize) -> ImageRes:
 def construct_workflow(
     request: ImageRequest,
 ) -> Workflow:
-    prompt = request.prompt
     size = request.size or ImageSize.Landscape
     width = request.width
     height = request.height
@@ -100,4 +96,8 @@ def construct_workflow(
         except ValueError:
             settings.seed = abs(hash(seed)) % (10**8)
 
-    return Workflow(prompt=prompt, settings=settings)
+    return Workflow(
+        prompt=request.prompt,
+        negative_prompt=request.negative_prompt,
+        settings=settings,
+    )

@@ -1,19 +1,13 @@
 import io
 import json
-import os
 import uuid
 from io import BytesIO
 
 import aiohttp
 import websockets
 
+from __init__ import COMFY_SERVER, HTTP_SCHEME, WS_SCHEME
 from workflow import Workflow
-
-COMFY_SERVER = os.getenv("COMFY_SERVER", "localhost:8188")
-USE_SSL = os.getenv("USE_SSL", "false").lower() in ("true", "1", "yes")
-
-WS_SCHEME = "wss" if USE_SSL else "ws"
-HTTP_SCHEME = "https" if USE_SSL else "http"
 
 
 async def _queue_prompt(prompt, cid: str):
@@ -65,7 +59,7 @@ async def _gen_image(ws, workflow, cid: str):
 async def generate_image(wf: Workflow) -> BytesIO:
     cid = str(uuid.uuid4())
     uri = f"{WS_SCHEME}://{COMFY_SERVER}/ws?clientId={cid}"
-    async with websockets.connect(uri) as ws:
+    async with websockets.connect(uri, max_size=10 * 1024 * 1024) as ws:
         await ws.send(json.dumps(wf.workflow))
         images = await _gen_image(ws, wf.workflow, cid=cid)
 

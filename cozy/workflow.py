@@ -1,8 +1,9 @@
 import json
 import random
 from dataclasses import dataclass, field
-
 from pathlib import Path
+
+from __init__ import NEGATIVE_PROMPT
 
 # Load default model
 DEFAULT_MODEL = "flux1-dev-fp8.json"
@@ -33,18 +34,18 @@ class Workflow:
     negative_prompt: str = "low resolution, bad anatomy, blurry"
     settings: ComfySettings = field(default_factory=ComfySettings)
     workflow: dict = field(default_factory=lambda: DEFAULT_WORKFLOW)
-    _enforced_negative_prompt: str = (
-        "nudity, violence, gore, blood, sexual content, explicit, offensive"
-    )
+    _enforced_negative_prompt: str = field(default_factory=lambda: NEGATIVE_PROMPT)
 
     def __post_init__(self):
+        negative_prompt = self.negative_prompt.strip()
+        negative_prompt += "" if not negative_prompt else ", "
+        negative_prompt += self._enforced_negative_prompt
+
         # Avoid mutating the default workflow
         self.workflow = self.workflow.copy()
         # Hardcoded values for now
         self.workflow["6"]["inputs"]["text"] = self.prompt
-        self.workflow["33"]["inputs"]["text"] = (
-            f"{self.negative_prompt}, {self._enforced_negative_prompt}"
-        )
+        self.workflow["33"]["inputs"]["text"] = negative_prompt
         self.workflow["31"]["inputs"]["seed"] = self.settings.seed
         self.workflow["31"]["inputs"]["steps"] = self.settings.steps
         self.workflow["27"]["inputs"]["width"] = self.settings.res.width

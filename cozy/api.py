@@ -1,4 +1,3 @@
-from dotenv import load_dotenv
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
@@ -9,8 +8,6 @@ from schema import (
     construct_workflow,
     ImageRequest,
 )
-
-load_dotenv()
 
 description = """
 <h2>A simple API for generating images with ComfyUI</h2>
@@ -51,11 +48,13 @@ async def index():
     name="Generate Image",
     tags=["Image Generation"],
 )
-async def get_generate_image(request: ImageRequest = Depends()) -> StreamingResponse:
+async def get_generate_image(
+    request: ImageRequest = Depends(),
+) -> StreamingResponse:
     """
     Generate an image based on the provided prompt and size using query parameters.
 
-    Returns PNG image bytes.
+    Returns PNG image bytes. Read the ImageRequest schema for details on query parameters.
     """
     workflow = construct_workflow(request)
 
@@ -75,7 +74,7 @@ async def post_generate_image(
     """
     Generate an image based on the provided prompt and size using a JSON body.
 
-    Returns PNG image bytes.
+    Returns PNG image bytes. Read the ImageRequest schema for details on body parameters.
     """
     return await get_generate_image(request)
 
