@@ -5,9 +5,10 @@ description = "A simple API wrapper to generate images using ComfyUI"
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
+    "aiohttp>=3.12.15",
     "fastapi>=0.118.0",
     "pillow>=11.3.0",
     "python-dotenv>=1.1.1",
     "uvicorn>=0.37.0",
-    "websocket-client>=1.8.0",
+    "websockets>=15.0.1",
 ]

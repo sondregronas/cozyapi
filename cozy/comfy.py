@@ -1,12 +1,11 @@
 import io
 import json
 import os
-import urllib.parse
-import urllib.request
 import uuid
 from io import BytesIO
 
-import websocket
+import aiohttp
+import websockets
 
 from cozy.workflow import Workflow
 
@@ -17,23 +16,22 @@ WS_SCHEME = "wss" if USE_SSL else "ws"
 HTTP_SCHEME = "https" if USE_SSL else "http"
 
 
-CLIENT_ID = str(uuid.uuid4())
+async def _queue_prompt(prompt, cid: str):
+    async with aiohttp.ClientSession() as session:
+        async with session.post(
+            f"{HTTP_SCHEME}://{COMFY_SERVER}/prompt",
+            json={"prompt": prompt, "client_id": cid},
+        ) as resp:
+            return await resp.json()
 
 
-def _queue_prompt(prompt):
-    p = {"prompt": prompt, "client_id": CLIENT_ID}
-    data = json.dumps(p).encode("utf-8")
-    req = urllib.request.Request(f"{HTTP_SCHEME}://{COMFY_SERVER}/prompt", data=data)
-    return json.loads(urllib.request.urlopen(req).read())
-
-
-def _gen_image(ws, workflow):
-    prompt_id = _queue_prompt(workflow)["prompt_id"]
+async def _gen_image(ws, workflow, cid: str):
+    """Handle websocket messages and collect generated images."""
+    prompt_id = (await _queue_prompt(workflow, cid=cid))["prompt_id"]
     current_node = ""
     output_images = dict()
 
-    while True:
-        out = ws.recv()
+    async for out in ws:
         if isinstance(out, str):
             message = json.loads(out)
 
@@ -53,7 +51,7 @@ def _gen_image(ws, workflow):
             # Track the current node
             current_node = data["node"]
 
-        # Store bytes from the websocket
+        # Store bytes from the websocket binary messages (not strings)
         else:
             if current_node != "save_image_websocket_node":
                 continue
@@ -64,12 +62,11 @@ def _gen_image(ws, workflow):
     return output_images
 
 
-def generate_image(wf: Workflow) -> BytesIO:
-    ws = websocket.create_connection(
-        f"{WS_SCHEME}://{COMFY_SERVER}/ws?clientId={CLIENT_ID}"
-    )
-    ws.send(json.dumps(wf.workflow))
-    images = _gen_image(ws, wf.workflow)
-    ws.close()
+async def generate_image(wf: Workflow) -> BytesIO:
+    cid = str(uuid.uuid4())
+    uri = f"{WS_SCHEME}://{COMFY_SERVER}/ws?clientId={cid}"
+    async with websockets.connect(uri) as ws:
+        await ws.send(json.dumps(wf.workflow))
+        images = await _gen_image(ws, wf.workflow, cid=cid)
 
     return io.BytesIO(images["save_image_websocket_node"][0])

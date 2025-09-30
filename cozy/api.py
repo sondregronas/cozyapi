@@ -39,7 +39,7 @@ async def get_generate_image(
     settings = ComfySettings(res=get_image_res(size))
     workflow = Workflow(prompt=prompt, settings=settings)
 
-    img = comfy.generate_image(wf=workflow)
+    img = await comfy.generate_image(wf=workflow)
     return StreamingResponse(img, media_type="image/png")
 
 
@@ -49,7 +49,7 @@ async def post_generate_image(request: ImageRequest) -> StreamingResponse:
     settings = ComfySettings(res=get_image_res(size=request.size))
     workflow = Workflow(prompt=request.prompt, settings=settings)
 
-    img = comfy.generate_image(wf=workflow)
+    img = await comfy.generate_image(wf=workflow)
     return StreamingResponse(img, media_type="image/png")
 
 
