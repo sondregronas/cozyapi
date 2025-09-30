@@ -23,7 +23,7 @@ async def _gen_image(ws, workflow, cid: str):
     """Handle websocket messages and collect generated images."""
     prompt_id = (await _queue_prompt(workflow, cid=cid))["prompt_id"]
     current_node = ""
-    output_images = dict()
+    output_image_bytes = b""
 
     async for out in ws:
         if isinstance(out, str):
@@ -49,11 +49,10 @@ async def _gen_image(ws, workflow, cid: str):
         else:
             if current_node != "save_image_websocket_node":
                 continue
-            images_output = output_images.get(current_node, [])
-            images_output.append(out[8:])
-            output_images[current_node] = images_output
+            # Drop the first 8 bytes (header)
+            output_image_bytes += out[8:]
 
-    return output_images
+    return output_image_bytes
 
 
 async def generate_image(wf: Workflow) -> BytesIO:
@@ -61,6 +60,6 @@ async def generate_image(wf: Workflow) -> BytesIO:
     uri = f"{WS_SCHEME}://{COMFY_SERVER}/ws?clientId={cid}"
     async with websockets.connect(uri, max_size=10 * 1024 * 1024) as ws:
         await ws.send(json.dumps(wf.workflow))
-        images = await _gen_image(ws, wf.workflow, cid=cid)
+        image_bytes = await _gen_image(ws, wf.workflow, cid=cid)
 
-    return io.BytesIO(images["save_image_websocket_node"][0])
+    return io.BytesIO(image_bytes)
