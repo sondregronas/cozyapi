@@ -5,7 +5,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 import comfy
-from util import ImageSize, get_image_size
+from util import get_image_res, ImageSize
 from workflow import Workflow, ComfySettings
 
 load_dotenv()
@@ -36,7 +36,7 @@ async def get_generate_image(
     prompt: str, size: ImageSize = ImageSize.Landscape
 ) -> StreamingResponse:
     """Generate an image based on the provided prompt and size using query parameters."""
-    settings = ComfySettings(size=get_image_size(size))
+    settings = ComfySettings(res=get_image_res(size))
     workflow = Workflow(prompt=prompt, settings=settings)
 
     img = comfy.generate_image(wf=workflow)
@@ -46,7 +46,7 @@ async def get_generate_image(
 @app.post("/generate", response_class=StreamingResponse)
 async def post_generate_image(request: ImageRequest) -> StreamingResponse:
     """Generate an image based on the provided prompt and size using a JSON body."""
-    settings = ComfySettings(size=get_image_size(request.size))
+    settings = ComfySettings(res=get_image_res(size=request.size))
     workflow = Workflow(prompt=request.prompt, settings=settings)
 
     img = comfy.generate_image(wf=workflow)

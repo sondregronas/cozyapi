@@ -1,6 +1,6 @@
 from enum import Enum
 
-from workflow import ImageSize
+from workflow import ImageRes
 
 
 class ImageSize(str, Enum):
@@ -9,11 +9,11 @@ class ImageSize(str, Enum):
     Landscape = "landscape"
 
 
-def get_image_size(size: ImageSize) -> ImageSize:
+def get_image_res(size: ImageSize) -> ImageRes:
     match size:
         case ImageSize.Square:
-            return ImageSize(512, 512)
+            return ImageRes(512, 512)
         case ImageSize.Portrait:
-            return ImageSize(512, 768)
+            return ImageRes(512, 768)
         case _:
-            return ImageSize(768, 512)
+            return ImageRes(768, 512)

@@ -11,7 +11,7 @@ with open(Path("workflows") / DEFAULT_MODEL, "r") as f:
 
 
 @dataclass
-class ImageSize:
+class ImageRes:
     width: int = 512
     height: int = 512
 
@@ -20,7 +20,7 @@ class ImageSize:
 class ComfySettings:
     seed: int = -1  # -1 for random seed
     steps: int = 40
-    size: ImageSize = field(default_factory=ImageSize)
+    res: ImageRes = field(default_factory=ImageRes)
 
     def __post_init__(self):
         if self.seed == -1:
@@ -47,5 +47,5 @@ class Workflow:
         )
         self.workflow["31"]["inputs"]["seed"] = self.settings.seed
         self.workflow["31"]["inputs"]["steps"] = self.settings.steps
-        self.workflow["27"]["inputs"]["width"] = self.settings.size.width
-        self.workflow["27"]["inputs"]["height"] = self.settings.size.height
+        self.workflow["27"]["inputs"]["width"] = self.settings.res.width
+        self.workflow["27"]["inputs"]["height"] = self.settings.res.height
