@@ -7,4 +7,8 @@ services:
       - .env
     ports:
       - "8000:8000"
+    # NOTE: Workflows must have a "SaveImageWebsocket" action with the node id: save_image_websocket_node
+    # ! LIMITATION: Currently the settings are hardcoded (width/height etc)
+    # volumes:
+    #   - ./custom_workflows:/app/custom_workflows
     restart: unless-stopped

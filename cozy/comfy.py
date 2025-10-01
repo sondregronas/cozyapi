@@ -58,7 +58,7 @@ async def _gen_image(ws, workflow, cid: str):
 async def generate_image(wf: Workflow) -> BytesIO:
     cid = str(uuid.uuid4())
     uri = f"{WS_SCHEME}://{COMFY_SERVER}/ws?clientId={cid}"
-    async with websockets.connect(uri, max_size=10 * 1024 * 1024) as ws:
+    async with websockets.connect(uri, max_size=50 * 1024 * 1024) as ws:
         await ws.send(json.dumps(wf.workflow))
         image_bytes = await _gen_image(ws, wf.workflow, cid=cid)
 

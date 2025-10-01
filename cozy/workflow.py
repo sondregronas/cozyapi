@@ -1,14 +1,13 @@
 import json
 import random
 from dataclasses import dataclass, field
-from pathlib import Path
 
-from __init__ import NEGATIVE_PROMPT
+from __init__ import NEGATIVE_PROMPT, WORKFLOW_PATH
+from nodemap import NODE_MAP
 
 # Load default model
-DEFAULT_MODEL = "flux1-dev-fp8.json"
-with open(Path("workflows") / DEFAULT_MODEL, "r") as f:
-    DEFAULT_WORKFLOW = json.load(f)
+with open(WORKFLOW_PATH, "r") as f:
+    WORKFLOW = json.load(f)
 
 
 @dataclass
@@ -33,7 +32,7 @@ class Workflow:
     prompt: str
     negative_prompt: str = "low resolution, bad anatomy, blurry"
     settings: ComfySettings = field(default_factory=ComfySettings)
-    workflow: dict = field(default_factory=lambda: DEFAULT_WORKFLOW)
+    workflow: dict = field(default_factory=lambda: WORKFLOW)
     _enforced_negative_prompt: str = field(default_factory=lambda: NEGATIVE_PROMPT)
 
     def __post_init__(self):
@@ -43,10 +42,13 @@ class Workflow:
 
         # Avoid mutating the default workflow
         self.workflow = self.workflow.copy()
-        # Hardcoded values for now
-        self.workflow["6"]["inputs"]["text"] = self.prompt
-        self.workflow["33"]["inputs"]["text"] = negative_prompt
-        self.workflow["31"]["inputs"]["seed"] = self.settings.seed
-        self.workflow["31"]["inputs"]["steps"] = self.settings.steps
-        self.workflow["27"]["inputs"]["width"] = self.settings.res.width
-        self.workflow["27"]["inputs"]["height"] = self.settings.res.height
+
+        key = [key for key in NODE_MAP if WORKFLOW_PATH.name in key][0]
+        n = NODE_MAP.get(key, NODE_MAP["default"])
+
+        self.workflow[n.prompt[0]]["inputs"][n.prompt[1]] = self.prompt
+        self.workflow[n.nprompt[0]]["inputs"][n.nprompt[1]] = negative_prompt
+        self.workflow[n.seed[0]]["inputs"][n.seed[1]] = self.settings.seed
+        self.workflow[n.steps[0]]["inputs"][n.steps[1]] = self.settings.steps
+        self.workflow[n.width[0]]["inputs"][n.width[1]] = self.settings.res.width
+        self.workflow[n.height[0]]["inputs"][n.height[1]] = self.settings.res.height

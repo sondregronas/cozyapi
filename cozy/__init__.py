@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 from dotenv import load_dotenv
 
@@ -14,3 +15,7 @@ NEGATIVE_PROMPT = os.getenv(
     "NEGATIVE_PROMPT",
     "nudity, violence, gore, blood, sexual content, explicit, offensive",
 )
+
+MAX_RESOLUTION = int(os.getenv("MAX_RESOLUTION", 1280))
+MAX_STEPS = int(os.getenv("MAX_STEPS", 50))
+WORKFLOW_PATH = Path(os.getenv("WORKFLOW_PATH", "workflows/flux1-dev-fp8.json"))

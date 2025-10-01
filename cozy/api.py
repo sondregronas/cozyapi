@@ -3,9 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 
 import comfy
+from helpers import construct_workflow
 from schema import (
     imagerequest_body,
-    construct_workflow,
     ImageRequest,
 )
 
@@ -37,8 +37,12 @@ app.add_middleware(
 )
 
 
+# TODO: Add a proper "queue" (or rate limiting) system
+
+
 @app.get("/", include_in_schema=False)
 async def index():
+    # TODO: Display queue / server status
     return {"message": "Cozy is running - visit the /docs to explore the API"}
 
 
@@ -78,6 +82,8 @@ async def post_generate_image(
     """
     return await get_generate_image(request)
 
+
+# TODO: Endpoint / option for transparent backgrounds?
 
 if __name__ == "__main__":
     import os
