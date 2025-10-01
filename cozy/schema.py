@@ -48,14 +48,14 @@ class ImageRequest(BaseModel):
     width: Optional[int] = Query(
         default=None,
         ge=16,
-        le=1024,
+        le=1280,
         description="Overrides the default width determined by `size`.",
         example=None,
     )
     height: Optional[int] = Query(
         default=None,
         ge=16,
-        le=1024,
+        le=1280,
         description="Overrides the default height determined by `size`.",
         example=None,
     )
