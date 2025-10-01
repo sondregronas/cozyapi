@@ -88,4 +88,4 @@ async def post_generate_image(
 if __name__ == "__main__":
     import os
 
-    os.system("uvicorn api:app --reload")
+    os.system("uvicorn api:app --reload --timeout-keep-alive 1800")
